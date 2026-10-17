@@ -1,0 +1,13 @@
+{
+  "name": "kadie-crm",
+  "version": "3.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {"start": "node server.js"},
+  "engines": {"node": ">=20"},
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0"
+  }
+}
