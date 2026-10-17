@@ -100,12 +100,14 @@ app.post('/webhook',async(req,res)=>{
 });
 
 app.use(auth);
-app.get('/api/status',(_req,res)=>res.json({brand:BRAND,databaseConfigured:Boolean(db),whatsappConfigured:Boolean(META_PHONE_NUMBER_ID&&META_WA_TOKEN&&META_VERIFY_TOKEN),graphVersion:GRAPH_VERSION}));
+app.get('/api/status',(_req,res)=>res.json({brand:BRAND,databaseConfigured:Boolean(db),whatsappConfigured:Boolean(META_PHONE_NUMBER_ID&&META_WA_TOKEN&&META_VERIFY_TOKEN),financeConfigured:Boolean(process.env.FINANCE_PASSWORD),graphVersion:GRAPH_VERSION}));
 app.get('/api/conversations',async(_req,res)=>{if(!db)return res.json([]);const {data,error}=await db.from('conversations').select('*').order('updated_at',{ascending:false}).limit(200);if(error)return res.status(500).json({error:error.message});res.json(data||[]);});
 app.get('/api/conversations/:id/messages',async(req,res)=>{if(!db)return res.json([]);const {data,error}=await db.from('messages').select('*').eq('conversation_id',req.params.id).order('created_at',{ascending:true}).limit(500);if(error)return res.status(500).json({error:error.message});res.json(data||[]);});
 app.post('/api/conversations/:id/send',async(req,res)=>{try{if(!db)throw new Error('Base de datos no configurada');const {data:c,error}=await db.from('conversations').select('*').eq('id',req.params.id).single();if(error)throw error;const body=text(req.body?.body);if(!body)throw new Error('Mensaje vacío');const sent=await waSend(c.phone,body);await saveMessage(c.id,{direction:'outbound',body,wa_message_id:sent?.messages?.[0]?.id||null,status:'sent',metadata:{sent_by:'human'}});await db.from('conversations').update({mode:'human',updated_at:new Date().toISOString()}).eq('id',c.id);res.json({ok:true});}catch(e){res.status(400).json({error:e.message});}});
 app.post('/api/conversations/:id/mode',async(req,res)=>{if(!db)return res.status(400).json({error:'Base de datos no configurada'});const mode=['bot','human','paused'].includes(req.body?.mode)?req.body.mode:'human';const {error}=await db.from('conversations').update({mode,updated_at:new Date().toISOString()}).eq('id',req.params.id);if(error)return res.status(500).json({error:error.message});res.json({ok:true,mode});});
 app.get('/api/orders',async(_req,res)=>{if(!db)return res.json([]);const {data,error}=await db.from('orders').select('*').order('created_at',{ascending:false}).limit(300);if(error)return res.status(500).json({error:error.message});res.json(data||[]);});
 app.post('/api/orders',async(req,res)=>{if(!db)return res.status(400).json({error:'Base de datos no configurada'});const payload={customer_name:text(req.body.customer_name),phone:phone(req.body.phone),product:text(req.body.product),amount:Number(req.body.amount||0),district:text(req.body.district),address:text(req.body.address),reference:text(req.body.reference),status:'Confirmado'};const {data,error}=await db.from('orders').insert(payload).select().single();if(error)return res.status(500).json({error:error.message});res.json(data);});
+
+require('./finance')({app,db});
 app.use(express.static(path.join(__dirname,'public')));
 app.listen(PORT,()=>console.log(`${BRAND} running on ${PORT}`));
