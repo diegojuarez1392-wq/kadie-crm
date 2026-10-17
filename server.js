@@ -109,5 +109,6 @@ app.get('/api/orders',async(_req,res)=>{if(!db)return res.json([]);const {data,e
 app.post('/api/orders',async(req,res)=>{if(!db)return res.status(400).json({error:'Base de datos no configurada'});const payload={customer_name:text(req.body.customer_name),phone:phone(req.body.phone),product:text(req.body.product),amount:Number(req.body.amount||0),district:text(req.body.district),address:text(req.body.address),reference:text(req.body.reference),status:'Confirmado'};const {data,error}=await db.from('orders').insert(payload).select().single();if(error)return res.status(500).json({error:error.message});res.json(data);});
 
 require('./finance')({app,db});
+require('./importer')({app,db});
 app.use(express.static(path.join(__dirname,'public')));
 app.listen(PORT,()=>console.log(`${BRAND} running on ${PORT}`));
