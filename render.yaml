@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: kadie-crm
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: CRM_BRAND
+        value: Kadie CRM
+      - key: META_GRAPH_VERSION
+        value: v26.0
