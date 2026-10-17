@@ -110,5 +110,6 @@ app.post('/api/orders',async(req,res)=>{if(!db)return res.status(400).json({erro
 
 require('./finance')({app,db});
 require('./importer')({app,db});
+require('./orders-ops')({app,db});
 app.use(express.static(path.join(__dirname,'public')));
 app.listen(PORT,()=>console.log(`${BRAND} running on ${PORT}`));
